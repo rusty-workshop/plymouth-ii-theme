@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Root half of plymouth-theme-sync: copies the regenerated theme into
+# place and rebuilds the initramfs. Takes no arguments on purpose --
+# this is the exact command granted passwordless sudo, so it must not
+# accept anything user-controlled.
+set -euo pipefail
+cp -r /home/rusty/Projects/plymouth-ii-theme/. /usr/share/plymouth/themes/ii/
+plymouth-set-default-theme -R ii
