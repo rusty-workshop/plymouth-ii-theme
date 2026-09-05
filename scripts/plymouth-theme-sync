@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Regenerates the "ii" Plymouth theme's PNG assets from the current
+# Material You palette and, if anything actually changed, installs
+# them and rebuilds the initramfs (via the passwordless
+# plymouth-theme-install wrapper). Safe to call often -- it no-ops
+# when the relevant colors haven't changed since the last run.
+set -euo pipefail
+
+COLORS="$HOME/.local/state/quickshell/user/generated/colors.json"
+THEME_DIR="$HOME/Projects/plymouth-ii-theme"
+STATE_FILE="$HOME/.cache/plymouth-theme-sync.lastcolors"
+
+[ -f "$COLORS" ] || exit 0
+
+relevant=$(jq -c '{background, surface_container, surface_container_high, primary, primary_container}' "$COLORS")
+hash=$(printf '%s' "$relevant" | sha256sum | cut -d' ' -f1)
+
+if [ -f "$STATE_FILE" ] && [ "$(cat "$STATE_FILE")" = "$hash" ]; then
+    exit 0
+fi
+
+bg=$(jq -r '.background' "$COLORS")
+track=$(jq -r '.surface_container_high' "$COLORS")
+primary=$(jq -r '.primary' "$COLORS")
+primary_container=$(jq -r '.primary_container' "$COLORS")
+surface=$(jq -r '.surface_container' "$COLORS")
+
+cd "$THEME_DIR/assets"
+
+magick -size 160x160 xc:none -fill "$primary_container" -draw "roundrectangle 0,0,159,159,44,44" icon_badge.png
+magick -size 18x18 xc:none -fill "$primary" -draw "circle 9,9 9,1" dot_primary.png
+
+tmp=$(mktemp -d)
+magick -size 160x160 xc:none -fill white -draw "circle 80,80 80,10" "$tmp/outer.png"
+magick -size 160x160 xc:none -fill white -draw "circle 80,80 80,24" "$tmp/inner.png"
+magick "$tmp/outer.png" "$tmp/inner.png" -compose DstOut -composite "$tmp/ring_mask.png"
+magick -size 160x160 xc:"$track" "$tmp/ring_mask.png" -alpha off -compose CopyOpacity -composite ring_track.png
+rm -rf "$tmp"
+
+magick -size 320x8 xc:none -fill "$track" -draw "roundrectangle 0,0,319,7,4,4" progress_bg.png
+magick -size 320x8 xc:none -fill "$primary" -draw "roundrectangle 0,0,319,7,4,4" progress_fill.png
+magick -size 360x120 xc:none -fill "$surface" -draw "roundrectangle 0,0,359,119,20,20" dialog_box.png
+
+sed -i "s/^Window.SetBackgroundTopColor(.*/Window.SetBackgroundTopColor($(python3 -c "
+h='$bg'.lstrip('#')
+print(', '.join(f'{int(h[i:i+2],16)/255:.4f}' for i in (0,2,4)))
+"));/" "$THEME_DIR/ii.script"
+sed -i "s/^Window.SetBackgroundBottomColor(.*/Window.SetBackgroundBottomColor($(python3 -c "
+h='$bg'.lstrip('#')
+print(', '.join(f'{int(h[i:i+2],16)/255:.4f}' for i in (0,2,4)))
+"));/" "$THEME_DIR/ii.script"
+
+sudo /home/rusty/.local/bin/plymouth-theme-install
+
+printf '%s' "$hash" > "$STATE_FILE"
+echo "plymouth-theme-sync: theme updated and initramfs rebuilt"

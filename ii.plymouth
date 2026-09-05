@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=ii
+Description=Minimal firefly-themed boot splash matching the illogical-impulse dots
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/ii/assets
+ScriptFile=/usr/share/plymouth/themes/ii/ii.script
