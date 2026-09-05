@@ -16,7 +16,7 @@ Window.SetBackgroundBottomColor(0.0745, 0.0745, 0.0784);
 tick = 0;
 status = "normal";
 
-# ---- Icon badge (rounded square container + "ii" mark), fades in once ----
+# ---- Icon badge (rounded square container + angular chevron mark), fades in once ----
 badge_image = Image("icon_badge.png");
 badge_sprite = Sprite(badge_image);
 badge_x = Window.GetX() + Window.GetWidth() / 2 - badge_image.GetWidth() / 2;
@@ -24,8 +24,7 @@ badge_y = Window.GetY() + Window.GetHeight() * 0.36 - badge_image.GetHeight() / 
 badge_sprite.SetPosition(badge_x, badge_y, 0);
 badge_sprite.SetOpacity(0);
 
-mark_raw = Image.Text("ii", 0.92, 0.92, 0.93);
-mark_image = mark_raw.Scale(mark_raw.GetWidth() * 2.4, mark_raw.GetHeight() * 2.4);
+mark_image = Image("icon_mark.png");
 mark_sprite = Sprite(mark_image);
 mark_sprite.SetPosition(badge_x + badge_image.GetWidth() / 2 - mark_image.GetWidth() / 2, badge_y + badge_image.GetHeight() / 2 - mark_image.GetHeight() / 2, 1);
 mark_sprite.SetOpacity(0);

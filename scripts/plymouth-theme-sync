@@ -30,6 +30,20 @@ cd "$THEME_DIR/assets"
 magick -size 160x160 xc:none -fill "$primary_container" -draw "roundrectangle 0,0,159,159,44,44" icon_badge.png
 magick -size 18x18 xc:none -fill "$primary" -draw "circle 9,9 9,1" dot_primary.png
 
+primary_light=$(python3 -c "
+import colorsys
+h='$primary'.lstrip('#')
+r,g,b=[int(h[i:i+2],16)/255 for i in (0,2,4)]
+hue,l,s=colorsys.rgb_to_hls(r,g,b)
+l2=min(1,l*1.18)
+r2,g2,b2=colorsys.hls_to_rgb(hue,l2,s)
+print('#%02x%02x%02x' % (round(r2*255), round(g2*255), round(b2*255)))
+")
+magick -size 80x80 xc:none \
+  -fill "$primary" -draw "polygon 40,8 12,66 26,66 40,34" \
+  -fill "$primary_light" -draw "polygon 40,8 40,34 54,66 68,66" \
+  icon_mark.png
+
 tmp=$(mktemp -d)
 magick -size 160x160 xc:none -fill white -draw "circle 80,80 80,10" "$tmp/outer.png"
 magick -size 160x160 xc:none -fill white -draw "circle 80,80 80,24" "$tmp/inner.png"
